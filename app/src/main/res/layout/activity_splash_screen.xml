@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#fe6100"
+    tools:context=".SplashScreen">
+
+
+
+    <TextView
+        android:id="@+id/text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="100dp"
+        android:textAlignment="center"
+        android:text="E-School"
+        android:textColor="@android:color/white"
+        android:textSize="30dp" />
+
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/animation_view"
+        android:layout_width="wrap_content"
+        android:layout_height="300dp"
+        android:layout_gravity="center_vertical"
+        android:scaleType="centerCrop"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:lottie_autoPlay="true"
+        app:lottie_loop="true"
+        app:lottie_rawRes="@raw/book"
+        tools:layout_editor_absoluteY="366dp"
+        app:layout_constraintStart_toEndOf="@+id/text"/>
+
+
+    <TextView
+        android:id="@+id/moreFont"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="80dp"
+        android:fontFamily="cursive"
+        android:text="Powered by EfullTech"
+        android:textAlignment="center"
+        android:textColor="@android:color/white"
+        android:textSize="20dp"
+        app:layout_constraintStart_toEndOf="@+id/animation_view" />
+
+
+
+</LinearLayout>
