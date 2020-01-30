@@ -2,6 +2,7 @@ package org.example.orafucharles.e_school;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import org.example.orafucharles.e_school.db.UserReaderDbHelper;
 import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Color;
@@ -9,14 +10,20 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
+import android.database.sqlite.SQLiteDatabase;
 
 public class MainActivity extends AppCompatActivity {
+    private TextView textViewResult;
+    UserReaderDbHelper db;
+    SQLiteDatabase sqLiteDatabase;
     private Dialog closeDialog;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        db = new UserReaderDbHelper(this);
+
 
 
     }
@@ -53,5 +60,9 @@ public class MainActivity extends AppCompatActivity {
         return;
 
     }
+
+
+
+
 
 }

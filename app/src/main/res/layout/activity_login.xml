@@ -20,7 +20,7 @@
         android:textColor="@color/cardview_light_background"
         android:textSize="40sp" />
     <EditText
-        android:id="@+id/username"
+        android:id="@+id/email"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
@@ -28,7 +28,7 @@
         android:layout_marginEnd="24dp"
         android:textColor="@color/cardview_light_background"
         android:drawableRight="@drawable/username"
-        android:hint="username"
+        android:hint="email"
         android:textColorHint="@color/cardview_light_background" />
     <EditText
         android:id="@+id/password"

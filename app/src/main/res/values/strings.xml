@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">E-School</string>
+    <string name="token">org.example.orafucharles.sharedpreference.token</string>
+    <!--<string name="password">org.example.orafucharles.sharedpreference.password</string>-->
 </resources>
