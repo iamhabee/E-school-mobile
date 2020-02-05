@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+    <RelativeLayout
+        android:id="@+id/ActivityMain_CardSN"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:orientation="horizontal" >
+        <EditText
+            android:id="@+id/ActivityMain_TipCardSN"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:textColorHint="#999999"
+            android:text="Card SN"
+            android:enabled="false"
+            android:textColor="@color/colorBlue"
+            android:textSize="16sp" />
+        <EditText
+            android:id="@+id/ActivityMain_InputCardSN"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/ActivityMain_TipCardSN"
+            android:hint="Card SN"
+            android:inputType="textNoSuggestions"
+            android:enabled="false"
+            android:maxLines="1"
+            android:textColorHint="#999999"
+            android:textSize="16sp" />
+    </RelativeLayout>
+    <RelativeLayout
+        android:id="@+id/ActivityMain_CardCode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/ActivityMain_CardSN"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:orientation="horizontal" >
+        <EditText
+            android:id="@+id/ActivityMain_TipCardCode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:maxLines="1"
+            android:textColorHint="#999999"
+            android:text="Card Code"
+            android:enabled="false"
+            android:textColor="@color/cardview_dark_background"
+            android:textSize="16sp" />
+        <EditText
+            android:id="@+id/ActivityMain_InputCardCode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/ActivityMain_TipCardCode"
+            android:hint="Card Code"
+            android:inputType="textNoSuggestions"
+            android:maxLines="1"
+            android:textColorHint="#999999"
+            android:textSize="16sp" />
+    </RelativeLayout>
+
+    <Button
+        android:id="@+id/ActivityMain_Confirm"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/ActivityMain_CardCode"
+        android:layout_centerHorizontal="true"
+        android:layout_marginLeft="16dp"
+        android:layout_marginRight="16dp"
+        android:layout_marginTop="16dp"
+        android:text="Confirm"
+        android:textAllCaps="false"/>
+
+</RelativeLayout>

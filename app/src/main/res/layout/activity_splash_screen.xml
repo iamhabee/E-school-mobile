@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="#fe6100"
-    tools:context=".SplashScreen">
+    tools:context="com.efulltech.efupay.e_school.SplashScreen">
 
 
 
@@ -40,9 +40,9 @@
         android:id="@+id/moreFont"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="80dp"
+        android:layout_marginTop="60dp"
         android:fontFamily="cursive"
-        android:text="Powered by EfullTech"
+        android:text="Powered by EfullTech Nigeria Limited"
         android:textAlignment="center"
         android:textColor="@android:color/white"
         android:textSize="20dp"

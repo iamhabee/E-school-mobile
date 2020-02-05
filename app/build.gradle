@@ -1,10 +1,12 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion 29
     buildToolsVersion "29.0.1"
     defaultConfig {
-        applicationId "org.example.orafucharles.e_school"
+        applicationId "com.efulltech.efupay.e_school"
         minSdkVersion 19
         targetSdkVersion 29
         versionCode 1
@@ -44,4 +46,15 @@ dependencies {
     implementation "android.arch.work:work-runtime:1.0.0-alpha04"
     implementation 'com.android.volley:volley:1.1.0'
     implementation 'com.google.code.gson:gson:2.4'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    implementation files('libs/cardkey.jar')
+    implementation files('libs/sms-gateway.jar')
+
+    implementation "com.airbnb.android:lottie:3.3.1"
+    implementation 'com.android.volley:volley:1.1.0'
+    implementation 'com.github.mayuce:LottieAlertDialog:1.1'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+
+
 }
