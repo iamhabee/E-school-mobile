@@ -32,6 +32,9 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.efull.cardkey.CardKeyAB;
+import com.efull.smsgateway.api.http.HttpHelper;
+import com.efull.smsgateway.api.json.JsonSMS;
+import com.efull.smsgateway.api.json.RequestJSON;
 import com.efulltech.efupay.e_school.*;
 import com.efulltech.efupay.e_school.db.UserReaderDbHelper;
 import com.efulltech.efupay.e_school.utils.Controller;
@@ -42,6 +45,8 @@ import com.labters.lottiealertdialoglibrary.LottieAlertDialog;
 import org.efulltech.efupay.e_school.R;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
@@ -153,10 +158,14 @@ public class MainActivity extends AppCompatActivity {
                     public void run() {
                         errorCreationErrorDialog.dismiss();
                     }
-                }, 1500, 500);
+                }, 2500, 1000);
             }
         }
     }
+
+
+
+
 
 
     @Override
@@ -211,7 +220,7 @@ public class MainActivity extends AppCompatActivity {
             public void run() {
                 dialog.dismiss();
             }
-        }, 1500, 500);
+        }, 2500, 1000);
 
     }
 

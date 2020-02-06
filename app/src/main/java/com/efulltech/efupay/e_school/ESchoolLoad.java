@@ -115,7 +115,7 @@ public class ESchoolLoad {
                 try {//passing the various json object that will be sent to the API
                     payload.put("card_serial_number", this.cardNumber);
                     payload.put("card_code", this.cardCode);
-                    payload.put("log_time", this.timeStamp);
+                    payload.put("log_timestamp", this.timeStamp);
                     Log.d("EFU PAYLOAD OBJECT:", payload.toString());
 
 //                    using volley api to get the various parameter that would aid the passage of the jsonobject to the API
