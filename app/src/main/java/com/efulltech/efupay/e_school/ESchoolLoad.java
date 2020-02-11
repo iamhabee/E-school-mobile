@@ -131,6 +131,7 @@ public class ESchoolLoad {
 //                                passing the handled response to a callback
                                 callback.done(response.getString("response"), null);
                             } catch (JSONException e) {
+                                callback.done(null, e);
                                 e.printStackTrace();
                             }
                         }
