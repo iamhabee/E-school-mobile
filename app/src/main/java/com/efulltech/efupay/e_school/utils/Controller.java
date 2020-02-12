@@ -19,8 +19,12 @@ import com.android.volley.Response;
 import com.android.volley.toolbox.JsonArrayRequest;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.efull.smsgateway.api.http.HttpHelper;
+import com.efull.smsgateway.api.json.JsonSMS;
+import com.efull.smsgateway.api.json.RequestJSON;
 import com.efulltech.efupay.e_school.ESchoolLoad;
 import com.efulltech.efupay.e_school.api.ArrayResponseCallback;
+import com.efulltech.efupay.e_school.api.JsonObjectResponse;
 import com.efulltech.efupay.e_school.api.ResponseCallback;
 import com.efulltech.efupay.e_school.db.UserContract;
 import com.efulltech.efupay.e_school.db.UserReaderDbHelper;
@@ -34,6 +38,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -96,16 +101,52 @@ public class Controller {
                         // and deleting such entries from the device's DB
                         if(e == null){
                             if(response.length() > 0){
+                                JSONArray smsPayload = new JSONArray();
                                 for (int i = 0; i < response.length(); i++){
                                     try {
                                         JSONObject entry = response.getJSONObject(i);
                                         if(!entry.isNull("response")){
                                             // get the card id
                                             String card_id = entry.getJSONObject("payload").getString("card_id");
+                                            if(entry.getString("response").equals("200")) {
+                                                Log.d("response code available", entry.toString());
+
+                                                // compose sms body
+                                                String appendage = "has just clocked in at";
+                                                if(!entry.getJSONObject("log").getBoolean("is_logged_in")){
+                                                    appendage = "has just clocked out as at";
+                                                }
+                                                String msId = entry.getJSONObject("message").getString("message_id");
+                                                String title = entry.getString("studentSchoolName")+ "("+entry.getJSONObject("message").getString("title")+")";
+                                                String body = "Hello "+entry.getJSONObject("message").getString("receiver_name")+
+                                                        ", your child "+entry.getString("studentName")+" "
+                                                        +appendage+" "+entry.getJSONObject("payload").getString("timestamp");
+                                                // create a new sms object and populate sms payload
+                                               JSONObject sms =  new JSONObject();
+                                               sms.put("msgId",msId);
+                                               sms.put("datetimeSubmit",entry.getJSONObject("payload").getString("timestamp"));
+                                               sms.put("msgText",title+"\n"+body);
+                                               sms.put("msIsdn",entry.getJSONObject("message").getString("receiver_phone"));
+                                               sms.put("sender","efull");
+                                               smsPayload.put(sms);
+                                            }
                                             // delete entry from local DB
                                             UserReaderDbHelper dbHelper = new UserReaderDbHelper(mContext);
                                             dbHelper.deleteData(card_id);
                                         }
+                                    } catch (JSONException ex) {
+                                        ex.printStackTrace();
+                                    }
+                                }
+                                // check if smsPayload has any content to be sent and handle accordingly
+                                if(smsPayload.length() > 0){
+                                    Log.d("MSIDN", smsPayload.toString());
+                                    try {
+                                        this.sendSms(smsPayload, (objResponse, error)->{
+                                            if(error == null){
+                                                Log.d("SMS SEND RESPONSE: ", objResponse.toString());
+                                            }
+                                        });
                                     } catch (JSONException ex) {
                                         ex.printStackTrace();
                                     }
@@ -171,6 +212,43 @@ public class Controller {
                 callback.done(null, err);
             }
         });
+    }
+
+
+    public void sendSms(JSONArray payload, JsonObjectResponse callback) throws JSONException {
+                String url = "http://47.90.244.90:8081/sendsms";//this is were we set the base url and the endpoint
+                JSONObject smsRequest = new JSONObject();
+                smsRequest.put("smsRequest", payload);
+                Log.d("JSON SMS ARRAY", smsRequest.toString());
+
+        RequestQueue requestQueue = Volley.newRequestQueue(mContext);
+                JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, smsRequest, new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        Log.d("Response string", String.valueOf((response)));
+                        callback.done(response, null);
+                    }
+                }, error -> {
+                    // TODO: Handle error
+                    error.printStackTrace();
+                    Log.d("EFU PAYLOAD", error.toString());
+                    callback.done(null, error);
+                }) {
+                    @Override
+                    public Map<String, String> getHeaders() throws AuthFailureError {
+                        Map<String, String> params = new HashMap<String, String>();
+                        params.put("Accept", "application/json");
+                        params.put("Content-Type", "application/json");
+                        return params;
+                    }
+                };
+                // set retry policy to determine how long volley should wait before resending a failed request
+                jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(
+                        30000,
+                        DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                        DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+                // add jsonObjectRequest to the queue
+                requestQueue.add(jsonObjectRequest);
     }
 
     public static void showOperationsDialog(String title, String description) {
