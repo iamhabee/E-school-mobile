@@ -21,11 +21,17 @@ public class BaseApplication extends Application {
             @Override
             public void run() {
                 try {
+//                    move sent messages to the server
+                    controller.queryMessageToTheApi();
+                    // attempt to send SMS to parents
+                    controller.queryOutgoingNotifsAndSendToApi();
+                    // send all logs to the server for processing
                     controller.queryStudentDetailsAndSendTOApi();
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }
-        }, 0, 30000);
+        }, 0, 60000);
+
     }
 }

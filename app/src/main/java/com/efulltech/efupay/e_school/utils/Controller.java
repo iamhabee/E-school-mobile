@@ -44,22 +44,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.efulltech.efupay.e_school.db.UserContract.UserEntry.TABLE_NAME1;
+
 public class Controller {
 
     private  static final int TIME_OUT = 5000;
-
     private  static final int MSG_DISMISS_DIALOG = 0;
     private AlertDialog mAlertDialog;
-
     private static final String TAG = "Controller";
     private static LottieAlertDialog dialog;
-   private static Context mContext;
+    private static Context mContext;
     SharedPreferences mPreferences;
     SharedPreferences.Editor mEditor;
     private ProgressDialog progressDialog;
     private LottieAlertDialog studentSuccessDialog;
-    private static UserReaderDbHelper dbHelper;
+    UserReaderDbHelper dbHelper;
     private Gson gson = new Gson();
+    SQLiteDatabase sqLiteDatabase;
+
+
 
     public Controller(Context context, SharedPreferences preferences) {
 
@@ -71,6 +74,173 @@ public class Controller {
     public Controller(Context context) {
         this.mContext = context;
         dbHelper = new UserReaderDbHelper(mContext);
+    }
+    public void queryOutgoingNotifsAndSendToApi() throws JSONException {
+        SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_NAME1 + " WHERE "
+                + UserContract.UserEntry.MESSAGE_SENT+ "=?", new String[]{"false"});
+        Log.d("Draft Entries", String.valueOf(cursor.getCount()));
+        JSONArray smsPayload = new JSONArray();
+        // if Cursor is contains results
+        if (cursor != null) {
+            // move cursor to first row
+            if (cursor.moveToFirst()) {
+                do {
+
+                    // create a new sms object and populate sms payload
+                    JSONObject sms = new JSONObject();
+                    sms.put("msgId", cursor.getString(cursor.getColumnIndex(UserContract.UserEntry.MESSAGE_ID)));
+                    sms.put("datetimeSubmit", cursor.getString(cursor.getColumnIndex(UserContract.UserEntry.DATE))); // change this to current device time
+                    sms.put("msgText", cursor.getString(cursor.getColumnIndex(UserContract.UserEntry.MESSAGE_CONTENT)));
+                    sms.put("msIsdn", cursor.getString(cursor.getColumnIndex(UserContract.UserEntry.MESSAGE_ISDN)));
+                    sms.put("sender", "efull");
+                    smsPayload.put(sms);
+                } while (cursor.moveToNext());
+            }
+
+            // check if smsPayload has any content to be sent and handle accordingly
+            if(smsPayload.length() > 0){
+                Log.d("SMS PAYLOAD FINAL", smsPayload.toString());
+                try {
+                    this.sendSms(smsPayload, (objResponse, error)->{
+                        if(error == null){
+                            Log.d("SMS SEND RESPONSE: ", objResponse.toString());
+                            // check if responseCode is OK
+                            try {
+                                if(objResponse.getString("responseCode").equals("OK")){
+                                    // loop through smsResponses array
+                                    for(int i = 0; i < objResponse.getJSONArray("smsResponses").length(); i++){
+                                        // for each sms sent, handle accordingly
+                                        JSONObject entry = objResponse.getJSONArray("smsResponses").getJSONObject(i);
+                                        if(entry.getBoolean("requestOk")){
+                                            dbHelper.updateSmsData(entry.getString("msgId"));
+                                        }
+                                    }
+                                }
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    });
+                } catch (JSONException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public void persistSentMessagesOnTheServer(JSONArray eSchool, ArrayResponseCallback callback){
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(mContext);
+//        using sharedpref to get the token of the school logged in
+        Controller controller = new Controller(mContext, preferences);
+        controller.getToken(mContext, (token, err) -> {//making use of the token gotten the sharedpref in the controller
+            if (err == null) {
+                String url = Globals.ESCHOOL_BASE_URL+"sentMessageLog";//this is were we set the base url and the endpoint
+                Log.d("JSON ARRAY", eSchool.toString());
+//                try {
+
+//                    using volley api to get the various parameter that would aid the passage of the jsonobject to the API
+                RequestQueue requestQueue = Volley.newRequestQueue(mContext);
+                JsonArrayRequest jsonObjectRequest = new JsonArrayRequest(Request.Method.POST, url, eSchool, new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray response) {
+
+                        Log.d("message response string", String.valueOf((response)));
+//                            if (response.)
+                        // handle response
+//                                passing the handled response to a callback
+                        callback.done(response, null);
+                    }
+                }, error -> {
+                    // TODO: Handle error
+                    error.printStackTrace();
+                    Log.d("EFU SCHOOL", error.toString());
+                    callback.done(null, error);
+                }) {
+                    @Override
+                    public Map<String, String> getHeaders() throws AuthFailureError {
+                        Map<String, String> params = new HashMap<String, String>();
+                        params.put("Accept", "application/json");
+                        params.put("Content-Type", "application/json");
+                        params.put("Authorization", "Bearer " + token);
+                        return params;
+                    }
+                };
+                // set retry policy to determine how long volley should wait before resending a failed request
+                jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(
+                        30000,
+                        DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                        DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+                // add jsonObjectRequest to the queue
+                requestQueue.add(jsonObjectRequest);
+//                } catch (JSONException e) {
+//                    e.printStackTrace();
+//                    callback.done(null, e);
+//                }
+            } else {
+                Log.d("EFU MESSAGE", err.toString());
+                callback.done(null, err);
+            }
+        });
+    }
+
+
+    public void queryMessageToTheApi() throws JSONException {
+    SQLiteDatabase db = dbHelper.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_NAME1 + " WHERE "
+                + UserContract.UserEntry.MESSAGE_SENT+ "=?", new String[]{"true"});
+    Log.d(" Messages Entries", String.valueOf(cursor.getCount()));
+    JSONArray sender = new JSONArray();
+    // if Cursor is contains results
+    if (cursor != null) {
+        // move cursor to first row
+        if (cursor.moveToFirst()) {
+            do {
+                // setting the value of the data in the database when looping
+                JSONObject eMessage = new JSONObject();
+                eMessage.put("message_id", cursor.getString(cursor.getColumnIndex(UserContract.UserEntry.MESSAGE_ID)));
+                eMessage.put("message_isdn", cursor.getString(cursor.getColumnIndex(UserContract.UserEntry.MESSAGE_ISDN)));
+                eMessage.put("message_content", cursor.getString(cursor.getColumnIndex(UserContract.UserEntry.MESSAGE_CONTENT)));
+                eMessage.put("student_card_code", cursor.getString(cursor.getColumnIndex(UserContract.UserEntry.STUDENT_CARD_CODE)));
+                eMessage.put("message_sent", cursor.getString(cursor.getColumnIndex(UserContract.UserEntry.MESSAGE_SENT)));
+                eMessage.put("card_id", cursor.getString(cursor.getColumnIndex(UserContract.UserEntry.STUDENT_CARD_ID)));
+                eMessage.put("date", cursor.getString(cursor.getColumnIndex(UserContract.UserEntry.DATE)));
+
+                sender.put(eMessage);
+            } while (cursor.moveToNext());
+
+            if(sender.length() > 0){
+                this.persistSentMessagesOnTheServer(sender, (response, e) ->{
+                    // performing a check to validate entries
+                    // that have been persisted on the server
+                    // and deleting such entries from the device's DB
+                    if(e == null){
+                        if(response.length() > 0){
+                            for (int i = 0; i < response.length(); i++){
+                                try {
+                                    JSONObject entry = response.getJSONObject(i);
+                                    if (!entry.isNull("message_id")) {
+//                                        if(entry.getBoolean("saved")) {
+                                            // persist data on the device's database (outgoing_notification)
+
+                                            // delete entry from local DB
+                                            dbHelper.deleteSmsData(entry.getString("message_id"));
+//                                        }
+                                    }
+
+                                } catch (JSONException ex) {
+                                    ex.printStackTrace();
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+
+        }
+    }
+
     }
 
 
@@ -92,8 +262,8 @@ public class Controller {
                     eSchoolLoad.put("timestamp", cursor.getString(cursor.getColumnIndex(UserContract.UserEntry.CLOCK_TIMESTAMP)));
 
                     payloads.put(eSchoolLoad);
-
                 } while (cursor.moveToNext());
+
                 if(payloads.length() > 0){
                     this.persistDataOnline(payloads, (response, e) ->{
                         // performing a check to validate entries
@@ -101,52 +271,21 @@ public class Controller {
                         // and deleting such entries from the device's DB
                         if(e == null){
                             if(response.length() > 0){
-                                JSONArray smsPayload = new JSONArray();
                                 for (int i = 0; i < response.length(); i++){
                                     try {
                                         JSONObject entry = response.getJSONObject(i);
-                                        if(!entry.isNull("response")){
-                                            // get the card id
-                                            String card_id = entry.getJSONObject("payload").getString("card_id");
+                                        if (!entry.isNull("response")) {
                                             if(entry.getString("response").equals("200")) {
-                                                Log.d("response code available", entry.toString());
-
-                                                // compose sms body
-                                                String appendage = "has just clocked in at";
-                                                if(!entry.getJSONObject("log").getBoolean("is_logged_in")){
-                                                    appendage = "has just clocked out as at";
-                                                }
-                                                String msId = entry.getJSONObject("message").getString("message_id");
-                                                String title = entry.getString("studentSchoolName")+ "("+entry.getJSONObject("message").getString("title")+")";
-                                                String body = "Hello "+entry.getJSONObject("message").getString("receiver_name")+
-                                                        ", your child "+entry.getString("studentName")+" "
-                                                        +appendage+" "+entry.getJSONObject("payload").getString("timestamp");
-                                                // create a new sms object and populate sms payload
-                                               JSONObject sms =  new JSONObject();
-                                               sms.put("msgId",msId);
-                                               sms.put("datetimeSubmit",entry.getJSONObject("payload").getString("timestamp"));
-                                               sms.put("msgText",title+"\n"+body);
-                                               sms.put("msIsdn",entry.getJSONObject("message").getString("receiver_phone"));
-                                               sms.put("sender","efull");
-                                               smsPayload.put(sms);
+                                                // persist data on the device's database (outgoing_notification)
+                                                dbHelper = new UserReaderDbHelper(mContext);
+                                                sqLiteDatabase = dbHelper.getReadableDatabase();
+                                                UserReaderDbHelper.insertResponseFromApi(entry, sqLiteDatabase);
                                             }
-                                            // delete entry from local DB
-                                            UserReaderDbHelper dbHelper = new UserReaderDbHelper(mContext);
-                                            dbHelper.deleteData(card_id);
                                         }
-                                    } catch (JSONException ex) {
-                                        ex.printStackTrace();
-                                    }
-                                }
-                                // check if smsPayload has any content to be sent and handle accordingly
-                                if(smsPayload.length() > 0){
-                                    Log.d("MSIDN", smsPayload.toString());
-                                    try {
-                                        this.sendSms(smsPayload, (objResponse, error)->{
-                                            if(error == null){
-                                                Log.d("SMS SEND RESPONSE: ", objResponse.toString());
-                                            }
-                                        });
+                                        // delete entry from local DB
+                                        UserReaderDbHelper dbHelper = new UserReaderDbHelper(mContext);
+                                        dbHelper.deleteData(entry.getJSONObject("payload").getString("card_id"));
+
                                     } catch (JSONException ex) {
                                         ex.printStackTrace();
                                     }
@@ -159,6 +298,7 @@ public class Controller {
         }
     }
 
+
     public void persistDataOnline(JSONArray payload, ArrayResponseCallback callback){
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(mContext);
 //        using sharedpref to get the token of the school logged in
@@ -166,7 +306,7 @@ public class Controller {
         controller.getToken(mContext, (token, err) -> {//making use of the token gotten the sharedpref in the controller
             if (err == null) {
                 String url = Globals.ESCHOOL_BASE_URL+"saveStudentLog";//this is were we set the base url and the endpoint
-                Log.d("JSON ARRAY", payload.toString());
+                Log.d(" First JSON ARRAY", payload.toString());
 //                try {
 
 //                    using volley api to get the various parameter that would aid the passage of the jsonobject to the API
@@ -221,7 +361,7 @@ public class Controller {
                 smsRequest.put("smsRequest", payload);
                 Log.d("JSON SMS ARRAY", smsRequest.toString());
 
-        RequestQueue requestQueue = Volley.newRequestQueue(mContext);
+                RequestQueue requestQueue = Volley.newRequestQueue(mContext);
                 JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, smsRequest, new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
