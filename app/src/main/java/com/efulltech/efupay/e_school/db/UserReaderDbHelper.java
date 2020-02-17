@@ -14,6 +14,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import static com.efulltech.efupay.e_school.db.UserContract.UserEntry.TABLE_NAME;
 import static com.efulltech.efupay.e_school.db.UserContract.UserEntry.TABLE_NAME1;
+import static com.efulltech.efupay.e_school.db.UserContract.UserEntry.TABLE_NAME2;
 
 public class UserReaderDbHelper extends SQLiteOpenHelper {
 
@@ -49,6 +50,14 @@ public class UserReaderDbHelper extends SQLiteOpenHelper {
                 UserContract.UserEntry.DATE+ " TEXT NOT NULL, "+
                 UserContract.UserEntry.STUDENT_CARD_CODE + " TEXT NOT NULL );";
         db.execSQL(CREATE_TABLE2);
+
+        String CREATE_TABLE3 = "create table "+ TABLE_NAME2 +
+                " ( " + UserContract.UserEntry.D_ID+ " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                UserContract.UserEntry.FIRST_NAME+ " TEXT NOT NULL, "+
+                UserContract.UserEntry.LAST_NAME+ " TEXT NOT NULL, "+
+                UserContract.UserEntry.PHOTO_URL+ " TEXT NOT NULL, "+
+                UserContract.UserEntry.CLASS + " TEXT NOT NULL );";
+        db.execSQL(CREATE_TABLE3);
 
 
     }
@@ -105,6 +114,21 @@ public class UserReaderDbHelper extends SQLiteOpenHelper {
         Log.d("card code", cardCode);
         database.insert(TABLE_NAME, null, contentValues);
         Log.d("Database operations", "Item added to database");
+    }
+
+    public static void liveStudenentDetails(String firstname, String lastname, String dClass, String photoUrl, SQLiteDatabase database){
+
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(UserContract.UserEntry.FIRST_NAME, firstname);
+        contentValues.put(UserContract.UserEntry.LAST_NAME, lastname);
+        contentValues.put(UserContract.UserEntry.CLASS ,dClass);
+        contentValues.put(UserContract.UserEntry.PHOTO_URL ,photoUrl);
+
+        Log.d("firstname", firstname);
+        Log.d("lastname", lastname);
+        Log.d("class", dClass);
+        database.insert(TABLE_NAME2, null, contentValues);
+        Log.d("Database operations", "students added to database");
     }
 
 

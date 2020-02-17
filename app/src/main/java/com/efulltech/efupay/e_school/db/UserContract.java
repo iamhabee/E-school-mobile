@@ -26,5 +26,14 @@ public final class UserContract {
         public static final String MESSAGE_SENT = "message_sent";
         public static final String STUDENT_CARD_ID = "card_id";
         public static final String DATE = "date";
+
+
+        public static final String TABLE_NAME2 = "all_students";
+        public static final String D_ID = "id";
+        public static final String FIRST_NAME = "first_name";
+        public static final String LAST_NAME = "last_name";
+        public static final String CLASS = "class";
+        public static final String PHOTO_URL = "photo_url";
+
     }
 }

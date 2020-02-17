@@ -2,6 +2,7 @@ package com.efulltech.efupay.e_school;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -14,6 +15,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.efulltech.efupay.e_school.api.RetrofitService;
+import com.efulltech.efupay.e_school.utils.AppPref;
 import com.labters.lottiealertdialoglibrary.LottieAlertDialog;
 
 import com.efulltech.efupay.e_school.api.RetrofitClient;
@@ -32,29 +34,25 @@ import retrofit2.Response;
 
 public class Login extends AppCompatActivity {
 
+    private AppPref appPref;
+    private static Context mContext;
     private Controller controller;
     EditText mEmail;
     EditText mPassword;
     Button mSignInButton;
-    public SharedPreferences.Editor mEditor;
-    public SharedPreferences preferences;
     private LottieAlertDialog logInOperationProgressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        controller = new Controller(this, preferences);
+        controller = new Controller(this);
+        appPref = new AppPref(mContext);
 
 
         mEmail = findViewById(R.id.email);
         mPassword = findViewById(R.id.password);
         mSignInButton = findViewById(R.id.signInButton);
-//        mForgotPassword = findViewById(R.id.forgotPassword);
-
-
-        preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        mEditor = preferences.edit();
 
         mSignInButton.setOnClickListener(new OnClickListener() {
             @Override
@@ -106,17 +104,15 @@ public class Login extends AppCompatActivity {
                                     JSONObject obj = new JSONObject(responseBodyString);
                                     Log.d("Response body", String.valueOf(obj));
 
-                                    //get token to string
-                                    String token = obj.getString("access_token");
-                                    Log.d("Response body 5", token);
+                                    //get token and to string
+                                     obj.getString("access_token");
+                                    Log.d("Response body 5", obj.getString("access_token"));
+
 //                            save in shared preference
-                                    mEditor.putString("token", token);
-                                    mEditor.apply();
-//                            Toast.makeText(Login.this, token, Toast.LENGTH_SHORT).show();
-                                    String mToken = preferences.getString("token", "");
-                                    Log.d("shared", mToken);
-//                            Toast.makeText(Login.this, mToken, Toast.LENGTH_LONG).show();
-                                    //get user to string
+                                    AppPref appPref = new AppPref(mContext);
+                                    appPref.setStringValue("token", obj.getString("access_token") );
+                                     Log.d("myToken", appPref.getStringValue("token"));
+                                     //get user to string
                                     String user = obj.getString("message");
                                     Log.d("Response body 6", user);
                                     JSONObject obj2 = new JSONObject(user);
