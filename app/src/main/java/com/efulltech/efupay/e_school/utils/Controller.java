@@ -48,6 +48,7 @@ import java.util.List;
 import java.util.Map;
 
 import static com.efulltech.efupay.e_school.db.UserContract.UserEntry.TABLE_NAME1;
+import static com.efulltech.efupay.e_school.db.UserContract.UserEntry.TABLE_NAME2;
 
 public class Controller {
 
@@ -82,44 +83,70 @@ public class Controller {
         dbHelper = new UserReaderDbHelper(mContext);
     }
 
-
     public void validateToken(String token, JsonObjectResponse callback) throws JSONException {
-                String url = Globals.ESCHOOL_BASE_URL+"checkAuth";//this is were we set the base url and the endpoint
-                RequestQueue requestQueue = Volley.newRequestQueue(mContext);
-                JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, null, new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
-                        Log.d("validate token", String.valueOf((response)));
-                        callback.done(response, null);
-                    }
-                }, error -> {
-                    // TODO: Handle error
-                    error.printStackTrace();
-                    Log.d("EFU AUTH", error.toString());
-                    callback.done(null, error);
-                }) {
-                    @Override
-                    public Map<String, String> getHeaders() throws AuthFailureError {
-                        Map<String, String> params = new HashMap<String, String>();
-                        params.put("Accept", "application/json");
-                        params.put("Content-Type", "application/json");
-                        params.put("Authorization", "Bearer " + token);
-                        return params;
-                    }
-                };
-                // set retry policy to determine how long volley should wait before resending a failed request
-                jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(
-                        30000,
-                        DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
-                        DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-                // add jsonObjectRequest to the queue
-                requestQueue.add(jsonObjectRequest);
+        String url = Globals.ESCHOOL_BASE_URL+"checkAuth";//this is were we set the base url and the endpoint
+        RequestQueue requestQueue = Volley.newRequestQueue(mContext);
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                Log.d("validate token", String.valueOf((response)));
+                callback.done(response, null);
+            }
+        }, error -> {
+            // TODO: Handle error
+            error.printStackTrace();
+            Log.d("EFU AUTH", error.toString());
+            callback.done(null, error);
+        }) {
+            @Override
+            public Map<String, String> getHeaders() throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("Accept", "application/json");
+                params.put("Content-Type", "application/json");
+                params.put("Authorization", "Bearer " + token);
+                return params;
+            }
+        };
+        // set retry policy to determine how long volley should wait before resending a failed request
+        jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(
+                30000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        // add jsonObjectRequest to the queue
+        requestQueue.add(jsonObjectRequest);
     }
 
+
+    public void getStudentId(String id, JsonObjectResponse callback) throws JSONException {
+        String url = Globals.ESCHOOL_BASE_URL+"auth/schoolLogin";//this is were we set the base url and the endpoint
+        RequestQueue requestQueue = Volley.newRequestQueue(mContext);
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.POST, url, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                Log.d("validate school student", String.valueOf((response)));
+                callback.done(response, null);
+            }
+        }, error -> {
+            // TODO: Handle error
+            error.printStackTrace();
+            Log.d("EFU i", error.toString());
+            callback.done(null, error);
+        }) {
+        };
+        // set retry policy to determine how long volley should wait before resending a failed request
+        jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(
+                30000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+        // add jsonObjectRequest to the queue
+        requestQueue.add(jsonObjectRequest);
+    }
 
     public void checkIfUserHasLoggedInBefore() throws JSONException {
         AppPref appPref = new AppPref(mContext);
         String authToken = appPref.getStringValue("token");
+        Integer ids = appPref.getIntValue("id");
+
 
 
         if (authToken == null){
@@ -128,6 +155,8 @@ public class Controller {
         }
         else {
             Log.d("response token", authToken);
+            Log.d("studentids", String.valueOf(ids));
+
             this.validateToken(authToken, (response, e) ->{
                 if(e == null){
                     if(response.length() > 0){
@@ -135,6 +164,8 @@ public class Controller {
                                 if (response.getInt("response") == 200) {
                                     if(response.getBoolean("auth") == true){
                                         Log.d("response success", "response");
+//                                        Log.d("student", response.getJSONObject("students").getString("id"));
+
                                         Intent intent = new Intent(mContext.getApplicationContext(), MainActivity.class);
                                         mContext.startActivity(intent);
                                     }else{
@@ -157,7 +188,6 @@ public class Controller {
             });
         }
     }
-
 
     public void queryOutgoingNotifsAndSendToApi() throws JSONException {
         SQLiteDatabase db = dbHelper.getReadableDatabase();
@@ -267,115 +297,6 @@ public class Controller {
             }
         });
     }
-
-    public void persistStudentsDetailsInTheServer(JSONArray eStudents, ArrayResponseCallback callback){
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(mContext);
-//        using sharedpref to get the id of the school logged in
-        Controller controller = new Controller(mContext, preferences);
-        controller.getId(mContext, (id, err) -> {//making use of the id to get the sharedpref in the controller
-            if (err == null) {
-                String url = Globals.ESCHOOL_BASE_URL+"allStudents";//this is were we set the base url and the endpoint
-                Log.d("JSON ARRAY", eStudents.toString());
-
-//                    using volley api to get the various parameter that would aid the passage of the jsonobject to the API
-                RequestQueue requestQueue = Volley.newRequestQueue(mContext);
-                JsonArrayRequest jsonObjectRequest = new JsonArrayRequest(Request.Method.POST, url, eStudents, new Response.Listener<JSONArray>() {
-                    @Override
-                    public void onResponse(JSONArray response) {
-
-                        Log.d("students message respo", String.valueOf((response)));
-//                                passing the handled response to a callback
-                        callback.done(response, null);
-                    }
-                }, error -> {
-                    // TODO: Handle error
-                    error.printStackTrace();
-                    Log.d("EFU STUDENTS", error.toString());
-                    callback.done(null, error);
-                }) {
-                    @Override
-                    public Map<String, String> getHeaders() throws AuthFailureError {
-                        Map<String, String> params = new HashMap<String, String>();
-                        params.put("Accept", "application/json");
-                        params.put("Content-Type", "application/json");
-                        return params;
-                    }
-                };
-                // set retry policy to determine how long volley should wait before resending a failed request
-                jsonObjectRequest.setRetryPolicy(new DefaultRetryPolicy(
-                        30000,
-                        DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
-                        DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-                // add jsonObjectRequest to the queue
-                requestQueue.add(jsonObjectRequest);
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                    callback.done(null, e);
-//                }
-            } else {
-                Log.d("EFU MESSAGE", err.toString());
-                callback.done(null, err);
-            }
-        });
-    }
-
-//    public void queryMessageToTheApi() throws JSONException {
-//        SQLiteDatabase db = dbHelper.getReadableDatabase();
-//        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_NAME1 + " WHERE "
-//                + UserContract.UserEntry.MESSAGE_SENT+ "=?", new String[]{"true"});
-//        Log.d(" Messages Entries", String.valueOf(cursor.getCount()));
-//        JSONArray sender = new JSONArray();
-//        // if Cursor is contains results
-//        if (cursor != null) {
-//            // move cursor to first row
-//            if (cursor.moveToFirst()) {
-//                do {
-//                    // setting the value of the data in the database when looping
-//                    JSONObject eMessage = new JSONObject();
-//                    eMessage.put("message_id", cursor.getString(cursor.getColumnIndex(UserContract.UserEntry.MESSAGE_ID)));
-//                    eMessage.put("message_isdn", cursor.getString(cursor.getColumnIndex(UserContract.UserEntry.MESSAGE_ISDN)));
-//                    eMessage.put("message_content", cursor.getString(cursor.getColumnIndex(UserContract.UserEntry.MESSAGE_CONTENT)));
-//                    eMessage.put("student_card_code", cursor.getString(cursor.getColumnIndex(UserContract.UserEntry.STUDENT_CARD_CODE)));
-//                    eMessage.put("message_sent", cursor.getString(cursor.getColumnIndex(UserContract.UserEntry.MESSAGE_SENT)));
-//                    eMessage.put("card_id", cursor.getString(cursor.getColumnIndex(UserContract.UserEntry.STUDENT_CARD_ID)));
-//                    eMessage.put("date", cursor.getString(cursor.getColumnIndex(UserContract.UserEntry.DATE)));
-//
-//                    sender.put(eMessage);
-//                } while (cursor.moveToNext());
-//
-//                if(sender.length() > 0){
-//                    this.persistSentMessagesOnTheServer(sender, (response, e) ->{
-//                        // performing a check to validate entries
-//                        // that have been persisted on the server
-//                        // and deleting such entries from the device's DB
-//                        if(e == null){
-//                            if(response.length() > 0){
-//                                for (int i = 0; i < response.length(); i++){
-//                                    try {
-//                                        JSONObject entry = response.getJSONObject(i);
-//                                        if (!entry.isNull("message_id")) {
-////                                        if(entry.getBoolean("saved")) {
-//                                            // persist data on the device's database (outgoing_notification)
-//
-//                                            // delete entry from local DB
-//                                            dbHelper.deleteSmsData(entry.getString("message_id"));
-////                                        }
-//                                        }
-//
-//                                    } catch (JSONException ex) {
-//                                        ex.printStackTrace();
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    });
-//                }
-//
-//
-//            }
-//        }
-//
-//    }
 
 
     public void queryMessageToTheApi() throws JSONException {

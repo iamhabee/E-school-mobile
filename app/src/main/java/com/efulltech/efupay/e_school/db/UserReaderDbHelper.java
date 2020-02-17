@@ -55,7 +55,7 @@ public class UserReaderDbHelper extends SQLiteOpenHelper {
                 " ( " + UserContract.UserEntry.D_ID+ " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 UserContract.UserEntry.FIRST_NAME+ " TEXT NOT NULL, "+
                 UserContract.UserEntry.LAST_NAME+ " TEXT NOT NULL, "+
-                UserContract.UserEntry.PHOTO_URL+ " TEXT NOT NULL, "+
+                UserContract.UserEntry.CARD_CODE+ " TEXT NOT NULL, "+
                 UserContract.UserEntry.CLASS + " TEXT NOT NULL );";
         db.execSQL(CREATE_TABLE3);
 
@@ -67,7 +67,19 @@ public class UserReaderDbHelper extends SQLiteOpenHelper {
         onCreate(sqLiteDatabase);
     }
 
-//    public  static void insertResponseFromApi(String msgId, String msgIsdn, String msgContent, Boolean msgDelivered, Boolean msgSent, String msgCardCode , SQLiteDatabase database2){
+    public  static void insertStudentsApiResponse(JSONObject entry, SQLiteDatabase database3) throws JSONException {
+
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(UserContract.UserEntry.FIRST_NAME, entry.getString("firstname"));
+            contentValues.put(UserContract.UserEntry.LAST_NAME, entry.getString("lastname"));
+            contentValues.put(UserContract.UserEntry.CARD_CODE, entry.getString("card_code"));
+            contentValues.put(UserContract.UserEntry.CLASS, entry.getString("class"));
+
+            Log.d("STUDENT DB NEW ENTRY", entry.toString());
+            database3.insert(TABLE_NAME2, null, contentValues);
+            Log.d("notification", "Students added to database");
+    }
+
     public  static void insertResponseFromApi(JSONObject entry, SQLiteDatabase database2) throws JSONException {
         if(entry.getString("response").equals("200")) {
             Log.d("response code available", entry.toString());
@@ -116,29 +128,12 @@ public class UserReaderDbHelper extends SQLiteOpenHelper {
         Log.d("Database operations", "Item added to database");
     }
 
-    public static void liveStudenentDetails(String firstname, String lastname, String dClass, String photoUrl, SQLiteDatabase database){
-
-        ContentValues contentValues = new ContentValues();
-        contentValues.put(UserContract.UserEntry.FIRST_NAME, firstname);
-        contentValues.put(UserContract.UserEntry.LAST_NAME, lastname);
-        contentValues.put(UserContract.UserEntry.CLASS ,dClass);
-        contentValues.put(UserContract.UserEntry.PHOTO_URL ,photoUrl);
-
-        Log.d("firstname", firstname);
-        Log.d("lastname", lastname);
-        Log.d("class", dClass);
-        database.insert(TABLE_NAME2, null, contentValues);
-        Log.d("Database operations", "students added to database");
-    }
-
-
     public static Cursor readDatabase(SQLiteDatabase database){
         String[] projections = {UserContract.UserEntry.CLOCK_ID, UserContract.UserEntry.CLOCK_CARD_SERIAL_NUMBER, UserContract.UserEntry.CLOCK_CARD_CODE, UserContract.UserEntry.CLOCK_TIMESTAMP};
         Cursor cursor = database.query(TABLE_NAME,
                 projections, null, null,null, null, null);
         return  cursor;
     }
-
 
     public Integer deleteData (String id){
         SQLiteDatabase db = this.getWritableDatabase();

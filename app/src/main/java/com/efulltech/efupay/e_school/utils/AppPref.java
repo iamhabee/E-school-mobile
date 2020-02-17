@@ -36,4 +36,5 @@ import android.content.SharedPreferences;
         getAppPreferences().edit().putBoolean(name, value).apply();
     }
 
+
      }

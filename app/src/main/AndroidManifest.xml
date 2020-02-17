@@ -19,7 +19,6 @@
         android:theme="@style/AppTheme">
         <activity android:name="com.efulltech.efupay.e_school.NFC"></activity>
         <activity android:name="com.efulltech.efupay.e_school.Test" />
-        <activity android:name="com.efulltech.efupay.e_school.WorkManager" />
         <activity
             android:name="com.efulltech.efupay.e_school.Login"
             android:theme="@style/AppTheme.NoActionBar" />

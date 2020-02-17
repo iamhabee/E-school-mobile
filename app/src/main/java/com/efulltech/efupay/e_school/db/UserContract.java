@@ -33,7 +33,9 @@ public final class UserContract {
         public static final String FIRST_NAME = "first_name";
         public static final String LAST_NAME = "last_name";
         public static final String CLASS = "class";
-        public static final String PHOTO_URL = "photo_url";
+        public static final String CARD_CODE = "card_code";
+
+//        public static final String PHOTO_URL = "photo_url";
 
     }
 }

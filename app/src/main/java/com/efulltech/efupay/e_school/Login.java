@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -15,6 +16,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.efulltech.efupay.e_school.api.RetrofitService;
+import com.efulltech.efupay.e_school.db.UserReaderDbHelper;
 import com.efulltech.efupay.e_school.utils.AppPref;
 import com.labters.lottiealertdialoglibrary.LottieAlertDialog;
 
@@ -40,6 +42,8 @@ public class Login extends AppCompatActivity {
     EditText mEmail;
     EditText mPassword;
     Button mSignInButton;
+    UserReaderDbHelper dbHelper;
+    SQLiteDatabase sqLiteDatabase;
     private LottieAlertDialog logInOperationProgressDialog;
 
     @Override
@@ -47,8 +51,8 @@ public class Login extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         controller = new Controller(this);
+        dbHelper = new UserReaderDbHelper(this);
         appPref = new AppPref(mContext);
-
 
         mEmail = findViewById(R.id.email);
         mPassword = findViewById(R.id.password);
@@ -108,15 +112,22 @@ public class Login extends AppCompatActivity {
                                      obj.getString("access_token");
                                     Log.d("Response body 5", obj.getString("access_token"));
 
-//                            save in shared preference
+//                            save token in shared preference
                                     AppPref appPref = new AppPref(mContext);
                                     appPref.setStringValue("token", obj.getString("access_token") );
                                      Log.d("myToken", appPref.getStringValue("token"));
-                                     //get user to string
+
+//                                looping to get the  students details of the school that is logged in
+                                    for(int i = 0; i < obj.getJSONArray("students").length(); i++){
+                                        JSONObject student = obj.getJSONArray("students").getJSONObject(i);
+                                        sqLiteDatabase = dbHelper.getReadableDatabase();
+                                        UserReaderDbHelper.insertStudentsApiResponse(student, sqLiteDatabase);
+                                    }
+
+                                    //get user to string
                                     String user = obj.getString("message");
                                     Log.d("Response body 6", user);
                                     JSONObject obj2 = new JSONObject(user);
-
 
                                     //get name to string
                                     String name = obj2.getString("name");
@@ -159,28 +170,6 @@ public class Login extends AppCompatActivity {
 
 
     private void userLogin() {
-
-//        here we are validating if the fields are correctly filled
-//        String email = mEmail.getText().toString().trim();
-//        String password = mPassword.getText().toString().trim();
-//
-//        if (email.isEmpty()) {
-//            mEmail.setError("Email is required");
-//            mEmail.requestFocus();
-//            return;
-//        }
-//
-//        if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-//            mEmail.setError("Enter a valid email");
-//            mEmail.requestFocus();
-//            return;
-//        }
-//
-//        if (password.isEmpty()) {
-//            mPassword.setError("Password required");
-//            mPassword.requestFocus();
-//            return;
-//        }
 
     }
 

@@ -5,6 +5,7 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -36,6 +37,7 @@ import com.efull.smsgateway.api.http.HttpHelper;
 import com.efull.smsgateway.api.json.JsonSMS;
 import com.efull.smsgateway.api.json.RequestJSON;
 import com.efulltech.efupay.e_school.*;
+import com.efulltech.efupay.e_school.db.UserContract;
 import com.efulltech.efupay.e_school.db.UserReaderDbHelper;
 import com.efulltech.efupay.e_school.utils.Controller;
 import com.labters.lottiealertdialoglibrary.ClickListener;
@@ -51,6 +53,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
+import static com.efulltech.efupay.e_school.db.UserContract.UserEntry.TABLE_NAME2;
+
 public class MainActivity extends AppCompatActivity {
     private TextView textViewResult;
     private NfcAdapter nfcAdapter;
@@ -62,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
     private IntentFilter[] mFilters;
     private String[][] mTechLists;
     private String strCardSN;
+    UserReaderDbHelper dbHelper;
     private String strCardCode;
     private EditText etCardSN;
     private EditText etCardCode;
@@ -79,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         db = new UserReaderDbHelper(this);
+        dbHelper = new UserReaderDbHelper(this);
         controller = new Controller(this,preferences);
 
 
@@ -163,11 +169,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-
-
-
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -192,35 +193,59 @@ public class MainActivity extends AppCompatActivity {
         db = new UserReaderDbHelper(this);
         sqLiteDatabase = db.getReadableDatabase();
         db.addStudentDetails(cardSerialNumber,cardCode, sqLiteDatabase);
-//        controller.showSuccessMessage("Success", "Good to go", res -> {
-//                    Toast.makeText(MainActivity.this, "Details sent", Toast.LENGTH_SHORT).show();
-//                    Toast.makeText(MainActivity.this, "this is the serial number"+strCardSN, Toast.LENGTH_LONG).show();
-//                   Toast.makeText(MainActivity.this, "the start code is"+strCardCode, Toast.LENGTH_LONG).show();
-//                    Log.d("the number", cardSerialNumber + "the code is " + cardCode);
-//
-//                });
-        //this is a success alert dialog
-        LottieAlertDialog dialog = new LottieAlertDialog
-                .Builder(this, DialogTypes.TYPE_SUCCESS)
-                .setTitle("Success").setDescription("Card Data captured")
-                .setPositiveText("OK")
-                .setPositiveListener(new ClickListener() {
-                    @Override
-                    public void onClick(LottieAlertDialog d) {
-                        d.dismiss();
-                    }
-                })
-                .build();
-        dialog.setCancelable(false);
-        dialog.show();
+
+            SQLiteDatabase db = dbHelper.getReadableDatabase();
+            Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_NAME2 + " WHERE "
+                    + UserContract.UserEntry.CARD_CODE+ "=?", new String[]{cardCode});
+
+//                getting various parameter of the student on tap of the card
+        if(cursor != null){
+            if(cursor.moveToFirst()){
+                do{
+                    String first_name  = cursor.getString(cursor.getColumnIndex("first_name"));
+                    Log.e("dfname", "fname = " + first_name);
+                    Toast.makeText(this, first_name, Toast.LENGTH_SHORT).show();
+
+                    String last_name  = cursor.getString(cursor.getColumnIndex("last_name"));
+                    Log.e("dlname", "lname = " + last_name);
+                    Toast.makeText(this, first_name, Toast.LENGTH_SHORT).show();
+
+                    String dClass  = cursor.getString(cursor.getColumnIndex("class"));
+                    Log.e("dclass", "class = " + first_name);
+                    Toast.makeText(this, dClass, Toast.LENGTH_SHORT).show();
+
+
+
+                    //this is a success alert dialog
+                    LottieAlertDialog dialog = new LottieAlertDialog
+                            .Builder(this, DialogTypes.TYPE_SUCCESS)
+                            .setTitle(first_name +" "+ last_name).setDescription(dClass)
+                            .setPositiveText("OK")
+                            .setPositiveListener(new ClickListener() {
+                                @Override
+                                public void onClick(LottieAlertDialog d) {
+                                    d.dismiss();
+                                }
+                            })
+                            .build();
+                    dialog.setCancelable(false);
+                    dialog.show();
 //        setting a timer
-        Timer t = new Timer();
-        t.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                dialog.dismiss();
+                    Timer t = new Timer();
+                    t.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            dialog.dismiss();
+                        }
+                    }, 2500, 1000);
+
+
+
+                }while(cursor.moveToNext());
             }
-        }, 2500, 1000);
+        }
+
+
 
     }
 
