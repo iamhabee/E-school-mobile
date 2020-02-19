@@ -120,6 +120,9 @@ public class Login extends AppCompatActivity {
 //                                looping to get the  students details of the school that is logged in
                                     for(int i = 0; i < obj.getJSONArray("students").length(); i++){
                                         JSONObject student = obj.getJSONArray("students").getJSONObject(i);
+
+                                        Log.d("fnamee", student.getString("first_name"));
+
                                         sqLiteDatabase = dbHelper.getReadableDatabase();
                                         UserReaderDbHelper.insertStudentsApiResponse(student, sqLiteDatabase);
                                     }

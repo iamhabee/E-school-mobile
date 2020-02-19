@@ -147,8 +147,6 @@ public class Controller {
         String authToken = appPref.getStringValue("token");
         Integer ids = appPref.getIntValue("id");
 
-
-
         if (authToken == null){
             Intent intent = new Intent(mContext.getApplicationContext(), Login.class);
             mContext.startActivity(intent);

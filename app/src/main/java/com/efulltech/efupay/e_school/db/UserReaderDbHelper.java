@@ -70,10 +70,10 @@ public class UserReaderDbHelper extends SQLiteOpenHelper {
     public  static void insertStudentsApiResponse(JSONObject entry, SQLiteDatabase database3) throws JSONException {
 
             ContentValues contentValues = new ContentValues();
-            contentValues.put(UserContract.UserEntry.FIRST_NAME, entry.getString("firstname"));
-            contentValues.put(UserContract.UserEntry.LAST_NAME, entry.getString("lastname"));
+            contentValues.put(UserContract.UserEntry.FIRST_NAME, entry.getString("first_name"));
+            contentValues.put(UserContract.UserEntry.LAST_NAME, entry.getString("last_name"));
             contentValues.put(UserContract.UserEntry.CARD_CODE, entry.getString("card_code"));
-            contentValues.put(UserContract.UserEntry.CLASS, entry.getString("class"));
+            contentValues.put(UserContract.UserEntry.CLASS, entry.getString("class_name"));
 
             Log.d("STUDENT DB NEW ENTRY", entry.toString());
             database3.insert(TABLE_NAME2, null, contentValues);

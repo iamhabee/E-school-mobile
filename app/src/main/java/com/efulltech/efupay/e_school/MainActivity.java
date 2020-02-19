@@ -230,7 +230,7 @@ public class MainActivity extends AppCompatActivity {
                             .build();
                     dialog.setCancelable(false);
                     dialog.show();
-//        setting a timer
+                //        setting a timer
                     Timer t = new Timer();
                     t.schedule(new TimerTask() {
                         @Override
@@ -238,9 +238,6 @@ public class MainActivity extends AppCompatActivity {
                             dialog.dismiss();
                         }
                     }, 2500, 1000);
-
-
-
                 }while(cursor.moveToNext());
             }
         }
